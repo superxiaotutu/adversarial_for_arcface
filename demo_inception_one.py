@@ -24,39 +24,10 @@ target = 1
 
 graph = tf.get_default_graph()
 
-def jacobian(y_flat, x, inds):
-    loop_vars = [
-         tf.constant(0, tf.int32),
-         tf.TensorArray(tf.float32, size=2),
-    ]
-    _, jacobian = tf.while_loop(
-        lambda j,_: j < 2,
-        lambda j,result: (j+1, result.write(j, tf.gradients(y_flat[inds[j]], x))),
-        loop_vars)
-    return jacobian.stack()
-
 
 
 if __name__ == '__main__':
 
-    # Parse arguments
-    argv = sys.argv[1:]
-
-    # Default values
-    path_train_imagenet = 'datasets2/ILSVRC2012/train'
-    path_test_image = 'data/test_img.jpg'
-    
-    try:
-        opts, args = getopt.getopt(argv,"i:t:",["test_image=","training_path="])
-    except getopt.GetoptError:
-        print ('python ' + sys.argv[0] + ' -i <test image> -t <imagenet training path>')
-        sys.exit(2)
-
-    for opt, arg in opts:
-        if opt == '-t':
-            path_train_imagenet = arg
-        if opt == '-i':
-            path_test_image = arg
 
     with tf.device(device):
         persisted_sess = tf.Session()
@@ -146,4 +117,3 @@ if __name__ == '__main__':
 
 
         print('>> Testing the targeted universal perturbation on an image')
-
