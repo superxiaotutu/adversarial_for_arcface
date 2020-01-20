@@ -100,8 +100,8 @@ if __name__ == '__main__':
             tf.global_variables_initializer().run()
             print('loading...')
             variables = tf.contrib.framework.get_variables_to_restore()
-            variables_to_restore = tf.contrib.framework.get_variables_to_restore(exclude=['op_to_store_b:0'])
-            saver = tf.train.Saver(variables_to_restore)
+            # variables_to_restore = tf.contrib.framework.get_variables_to_restore(exclude=['op_to_store_b:0'])
+            saver = tf.train.Saver(variables)
             saver.restore(sess, args.model_path)
             print('done!')
 

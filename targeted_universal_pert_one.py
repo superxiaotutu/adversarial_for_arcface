@@ -44,20 +44,23 @@ def targeted_perturbation(dataset, f, get_f, grads,target, delta=0.2, max_iter_u
 
     v = 0
     fooling_rate = 0.0
-    num_images =  int(np.shape(dataset)[0] / 2) # The images should be stacked ALONG FIRST DIMENSION
-
+    num_images =  int(np.shape(dataset)[0]) # The images should be stacked ALONG FIRST DIMENSION
+    dataset_for_foolingrate = dataset
     itr = 0
     while fooling_rate < 1-delta and itr < max_iter_uni:
+
         # Shuffle the dataset
+        indices = np.random.permutation(len(dataset))
+        dataset = dataset[indices]
         # np.random.shuffle(dataset)
-        trainset = dataset[0::2]
-        testset = dataset[1::2]
+        # trainset = dataset[0::2]
+        # testset = dataset[1::2]
         print ('Starting pass number ', itr,'Target is ' , target)
         # Go through the data set and compute the perturbation increments sequentially
         for k in range(0, num_images):
-            cur_img = trainset[k:(k+1), :, :, :]
+            cur_img = dataset[k:(k+1), :, :, :]
 
-            # print("\rProgress : ["+"#"*int(k/int(num_images/20))+"-"*(20-int(k/int(num_images/20)))+"] ", str(k).zfill(len(str(num_images))), ' / ',num_images,"," ,end="")
+            print("\rProgress : ["+"#"*int(k/int(num_images/20))+"-"*(20-int(k/int(num_images/20)))+"] ", str(k).zfill(len(str(num_images))), ' / ',num_images,"," ,end="")
             # Compute adversarial perturbation
             dr,iter,pert_label,_ = deeptarget(cur_img + v,  f, grads, overshoot=overshoot, max_iter=max_iter_df,target=target)
 
@@ -81,7 +84,7 @@ def targeted_perturbation(dataset, f, get_f, grads,target, delta=0.2, max_iter_u
         # print("")
         # print('TARGET FOOLING RATE = ', target_fooling_rate)
 
-        fooling_rate = fooling_rate_calc_one(v=v,dataset=dataset,f=f, get_f=get_f)
+        fooling_rate = fooling_rate_calc_one(v=v,dataset=dataset_for_foolingrate,f=f, get_f=get_f)
         print("")
         print('FOOLING RATE = ', fooling_rate)
 

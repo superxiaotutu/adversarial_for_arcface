@@ -17,7 +17,7 @@ def proj_lp(v, xi, p):
 
     return v
 
-def targeted_perturbation(dataset,  f, grads,target, delta=0.2, max_iter_uni = np.inf, xi=10, p=np.inf, overshoot=0.02, max_iter_df=20):
+def targeted_perturbation(dataset, f, get_f, grads,target, delta=0.2, max_iter_uni = np.inf, xi=0.2, p=np.inf, overshoot=0.02, max_iter_df=20):
     """
     :param dataset: Images of size MxHxWxC (M: number of images). I Recommend M > 5000
 
@@ -27,7 +27,7 @@ def targeted_perturbation(dataset,  f, grads,target, delta=0.2, max_iter_uni = n
 
     :param delta: controls the desired target fooling rate (default = 80% fooling rate)
 
-    :target : target classes namber. 
+    :target : target classes namber.
 
     :param max_iter_uni: optional other termination criterion (maximum number of iteration, default = np.inf)
 
@@ -50,18 +50,20 @@ def targeted_perturbation(dataset,  f, grads,target, delta=0.2, max_iter_uni = n
     while fooling_rate < 1-delta and itr < max_iter_uni:
         # Shuffle the dataset
         # np.random.shuffle(dataset)
-
+        trainset = dataset[0::2]
+        testset = dataset[1::2]
         print ('Starting pass number ', itr,'Target is ' , target)
         # Go through the data set and compute the perturbation increments sequentially
         for k in range(0, num_images):
-            cur_img = dataset[2*k:(2*k+2), :, :, :]
+            train_img = trainset[k:(k+1), :, :, :]
+            test_img = testset[k:(k + 1), :, :, :]
 
             print("\rProgress : ["+"#"*int(k/int(num_images/20))+"-"*(20-int(k/int(num_images/20)))+"] ", str(k).zfill(len(str(num_images))), ' / ',num_images,"," ,end="")
             # Compute adversarial perturbation
-            dr,iter,pert_label,_ = deeptarget(cur_img + v,  f, grads, overshoot=overshoot, max_iter=max_iter_df,target=target)
+            dr,iter,pert_label,_ = deeptarget(train_img + v, test_img, f, grads, overshoot=overshoot, max_iter=max_iter_df,target=target)
 
 
-            # print(" Tracking labels :",int(np.argmax(np.array(f(cur_img,cur_img+v)).flatten())),"->",pert_label," "*6,end="")
+            # print(" Tracking labels :",int(np.argmax(np.array(f(train_img+v)).flatten())),"->",pert_label," "*6,end="")
 
             # Make sure it converged...
             if iter < max_iter_df-1:
@@ -80,7 +82,7 @@ def targeted_perturbation(dataset,  f, grads,target, delta=0.2, max_iter_uni = n
         # print("")
         # print('TARGET FOOLING RATE = ', target_fooling_rate)
 
-        fooling_rate = my_fooling_rate_calc(v=v,dataset=dataset,f=f)
+        fooling_rate = fooling_rate_calc_one(v=v,dataset=dataset,f=f, get_f=get_f)
         print("")
         print('FOOLING RATE = ', fooling_rate)
 

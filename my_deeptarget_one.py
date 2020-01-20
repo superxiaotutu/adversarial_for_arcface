@@ -14,7 +14,8 @@ def deeptarget(image,  f, grads, overshoot=0.02, max_iter=50,target=None):
     assert (image.shape == (1,112,112,3))
     f_image = np.array(f(image)).flatten()
     # feature_image = np.array(get_feature(img0))
-    label = np.sign(f_image)
+    # label = np.sign(f_image)
+    label = np.array([1.])
 
 
     input_shape = image.shape
@@ -36,7 +37,7 @@ def deeptarget(image,  f, grads, overshoot=0.02, max_iter=50,target=None):
         w = np.asarray(grads(pert_image))
         f_t = f_i
         pert = abs(f_t) / np.linalg.norm(w)
-        r_i = pert * w / np.linalg.norm(w)
+        r_i = -pert * w / np.linalg.norm(w)
         r_tot = r_tot + r_i
 
         # compute new perturbed image

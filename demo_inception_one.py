@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 import sys, getopt
 import zipfile
 from timeit import time
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
 if sys.version_info[0] >= 3:
     from urllib.request import urlretrieve
@@ -30,6 +32,9 @@ if __name__ == '__main__':
 
 
     with tf.device(device):
+        # config = tf.ConfigProto()
+        # config.gpu_options.allow_growth = True
+        # session = tf.Session(config=config)
         persisted_sess = tf.Session()
         inception_model_path = './model/pb/arcface_a.pb'
 
@@ -50,7 +55,7 @@ if __name__ == '__main__':
 
         persisted_input = persisted_sess.graph.get_tensor_by_name('input_image:0')
         persisted_output = persisted_sess.graph.get_tensor_by_name("op_to_store_a:0")
-        hsq_f = np.load('./data/img/pyy.npy')
+        hsq_f = np.load('./data/img/hsq.npy')
         # grad = tf.gradients(persisted_output,persisted_input_b)
         # def get_feature_map(image_inp_b):
         #     feature_map_raw = persisted_sess.run(persisted_debug,feed_dict={
@@ -59,9 +64,9 @@ if __name__ == '__main__':
         #                                                        })
         #     return feature_map_raw
 
-        hsq_p = tf.placeholder(dtype=tf.float32, shape=[None, 512])
+        target_placeholder = tf.placeholder(dtype=tf.float32, shape=[None, 512])
         threshold = 1.02
-        embeddings1 = hsq_p
+        embeddings1 = target_placeholder
         embeddings2 = persisted_output / tf.norm(persisted_output, axis=1, keepdims=True)
         diff = tf.subtract(embeddings1, embeddings2)
         dist = tf.reduce_sum(tf.multiply(diff, diff),axis=1)
@@ -86,7 +91,7 @@ if __name__ == '__main__':
         #                                                        })
         def f(image_inp): return persisted_sess.run(dist,
                                                     feed_dict={persisted_input: np.reshape(image_inp, (-1, 112, 112, 3)),
-                                                               hsq_p: np.reshape(hsq_f, (-1, 512))
+                                                               target_placeholder: np.reshape(hsq_f, (-1, 512))
                                                                })
 
         def get_f(image_inp): return persisted_sess.run(persisted_output, feed_dict={persisted_input:np.reshape(image_inp, (-1, 112, 112, 3))})
@@ -109,7 +114,7 @@ if __name__ == '__main__':
         # Running universal perturbation
         # v = universal_perturbation(X, f, grad_fs, delta=0.2)
 
-        v = targeted_perturbation(X, f, get_f, grad_b, delta=0.25,max_iter_uni=10,target=target,p=2)
+        v = targeted_perturbation(X, f, get_f, grad_b, delta=0.3,max_iter_uni=10,target=target,p=2, xi=10)
 
         # Saving the universal perturbation
         np.save(os.path.join(file_perturbation), v)

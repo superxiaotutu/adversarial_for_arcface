@@ -94,7 +94,7 @@ def create_lfw_npy(path='./data/lfw.bin',image_size=112):
     images_copy = np.zeros((6000,image_size,image_size,3))
     for i in range(5):
         images_copy[600*i:600*(i+1)] = images[600*i*2:600*(i*2+1)]
-    return images_copy[0:200]
+    return images_copy
 
 def create_imagenet_npy(path_train_imagenet, len_batch, num_class, p, q, r):
 
