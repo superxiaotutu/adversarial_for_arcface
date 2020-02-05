@@ -71,7 +71,7 @@ def do_image_list(img_list):
     return do_list
 
 
-def create_lfw_npy(path='./data/lfw.bin',image_size=112):
+def create_lfw_npy(image_num,path='./data/lfw.bin',image_size=112):
     print('reading %s' % path)
     bins, issame_list = pickle.load(open(path, 'rb'), encoding='bytes')
     num = len(bins)
@@ -92,10 +92,38 @@ def create_lfw_npy(path='./data/lfw.bin',image_size=112):
     print('cnt number is ' + str(cnt))
     images = images
     images_copy = np.zeros((6000,image_size,image_size,3))
-    for i in range(5):
+    for i in range(10):
         images_copy[600*i:600*(i+1)] = images[600*i*2:600*(i*2+1)]
-    return images_copy
+    return images_copy[0:image_num]
 
+def create_dogs(image_num,image_size=112):
+    # print('reading %s' % path)
+    # bins, issame_list = pickle.load(open(path, 'rb'), encoding='bytes')
+    # num = len(bins)
+    images = np.zeros(shape=[1000, image_size, image_size, 3], dtype=np.float32)
+    # images_f = np.zeros(shape=[image_num, image_size, image_size, 3], dtype=np.float32)
+    # m = config['augment_margin']
+    # s = int(m/2)
+    cnt = 0
+    for filename in os.listdir("./dog"):
+        print(filename)
+        img = misc.imread("./dog/"+filename)
+        img = misc.imresize(img, [image_size, image_size])
+
+        # img = img[s:s+image_size, s:s+image_size, :]
+        img = img / 127.5 - 1.0
+        images[cnt] = img
+        cnt += 1
+        if(cnt == image_num+1):
+            return images[0:image_num]
+    print('done!')
+    print('cnt number is ' + str(cnt))
+    print(images.shape)
+    # images = images
+    # images_copy = np.zeros((6000,image_size,image_size,3))
+    # for i in range(10):
+    #     images_copy[600*i:600*(i+1)] = images[600*i*2:600*(i*2+1)]
+    return images[0:image_num]
 def create_imagenet_npy(path_train_imagenet, len_batch, num_class, p, q, r):
 
     # path_train_imagenet = '/datasets2/ILSVRC2012/train';

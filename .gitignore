@@ -1,0 +1,11 @@
+/test 2
+/Images
+/eval
+*.tar
+*.zip
+/dog
+/model
+/data
+/configs
+/backbone
+.DS_Store

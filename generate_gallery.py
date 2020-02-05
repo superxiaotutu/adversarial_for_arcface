@@ -5,21 +5,24 @@ import pickle
 import argparse
 import numpy as np
 import tensorflow as tf
-
+from util_univ import *
 from scipy import misc
-
+from prepare_imagenet_data import *
 from model import get_embd
+from new_utils import *
 from eval.utils import calculate_roc, calculate_tar
-
+from model import get_embd
+from sklearn.decomposition import PCA
+from mpl_toolkits.mplot3d import Axes3D
 
 def get_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--mode', type=str, default='build', help='model mode: build')
     parser.add_argument('--config_path', type=str, default='./configs/config_ms1m_100.yaml', help='config path, used when mode is build')
-    parser.add_argument('--model_path', type=str, default='/data/hhd/InsightFace-tensorflow/output/20190116-130753/checkpoints/ckpt-m-116000', help='model path')
-    parser.add_argument('--read_path', type=str, default='', help='path to image file or directory to images')
-    parser.add_argument('--save_path', type=str, default='embds.pkl', help='path to save embds')
+    parser.add_argument('--model_path', type=str, default='./model/ms1m/best-m-334000', help='model path')
+    parser.add_argument('--read_path', type=str, default='./image/lfw.bin',help='path to image file or directory to images')
+    parser.add_argument('--save_path', type=str, default='./data/img/gallery.pkl', help='path to save embds')
     parser.add_argument('--train_mode', type=int, default=0, help='whether set train phase to True when getting embds. zero means False, one means True')
 
     return parser.parse_args()
@@ -33,8 +36,8 @@ def load_image(path, image_size):
         paths = [path]
     images = []
     images_f = []
-    for path in paths:
-        img = misc.imread(path)
+    for imgpath in paths:
+        img = misc.imread(path+'/'+imgpath)
         img = misc.imresize(img, [image_size, image_size])
         # img = img[s:s+image_size, s:s+image_size, :]
         img_f = np.fliplr(img)
@@ -106,15 +109,47 @@ if __name__ == '__main__':
             print('done!')
 
             batch_size = config['batch_size']
-            imgs, imgs_f, fns = load_image(args.read_path, config['image_size'])
+            imgs, labels, paths = generate_data()
+            # imgs, imgs_f, fns = load_image(args.read_path, config['image_size'])
+            # X = create_lfw_npy(500)
+            # dogs = create_dogs(500)
+            # v = np.load(os.path.join('data', 'img', 'not_human .npy'))
+            # v = np.reshape(v, [112, 112, 3])
             print('forward running...')
+            # X_adv = X +v
             embds_arr = run_embds(sess, imgs, batch_size, config['image_size'], args.train_mode, embds, images, train_phase_dropout, train_phase_bn)
-            embds_f_arr = run_embds(sess, imgs_f, batch_size, config['image_size'], args.train_mode, embds, images, train_phase_dropout, train_phase_bn)
-            embds_arr = embds_arr/np.linalg.norm(embds_arr, axis=1, keepdims=True)+embds_f_arr/np.linalg.norm(embds_f_arr, axis=1, keepdims=True)
-            embds_arr = embds_arr/np.linalg.norm(embds_arr, axis=1, keepdims=True)
             print('done!')
             print('saving...')
-            embds_dict = dict(zip(fns, list(embds_arr)))
+            embds_dict = dict(zip(labels, list(embds_arr)))
+            # # pickle.dump(embds_dict, open(args.save_path, 'wb'))
+            print(labels[0])
+            print(embds_arr[0])
+
+            print(embds_dict[labels[0]])
+            np.save('./data/img/gallery.npy', embds_dict)
+            # embds_dict = dict(zip(fns, list(embds_arr)))
             # pickle.dump(embds_dict, open(args.save_path, 'wb'))
-            np.save('./data/img/hsq.npy',embds_arr)
+            # embds_adv = np.r_[embds_adv, embds_dogs]
+            # embds_arr.extend(embds_dogs)
+            # pca = PCA(n_components=3)
+            # pca.fit(embds)
+            # result = pca.transform(embds)
+            # result_d = pca.fit_transform(e
+            # mbds_dogs)
+            # fig = plt.figure()
+            # # ax = Axes3D(fig)
+            # ax = fig.add_subplot(1, 1, 1, projection='3d')
+            #
+            # # print(result[:,0])
+            # ax.set_xlim(-15,15)
+            # ax.set_ylim(-15, 15)
+            # ax.set_zlim(-15, 15)
+            # ax.scatter(result[0:500,0],result[0:500,1],result[0:500,2],c='r',s=5)
+            # ax.scatter(result[500:1000, 0], result[500:1000, 1], result[500:1000, 2], c='b', s=5)
+            # # plt.savefig('result.png')
+            # plt.show()
+
             print('done!')
+# embds_f_arr = run_embds(sess, imgs_f, batch_size, config['image_size'], args.train_mode, embds, images, train_phase_dropout, train_phase_bn)
+            # embds_arr = embds_arr/np.linalg.norm(embds_arr, axis=1, keepdims=True)+embds_f_arr/np.linalg.norm(embds_f_arr, axis=1, keepdims=True)
+            # embds_arr = embds_arr/np.linalg.norm(embds_arr, axis=1, keepdims=True)

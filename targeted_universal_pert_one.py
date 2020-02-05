@@ -1,7 +1,7 @@
 import numpy as np
 from my_deeptarget_one import deeptarget
 from my_util_univ import *
-
+import cv2
 def proj_lp(v, xi, p):
 
     # Project on the lp ball centered at 0 and of radius xi
@@ -44,21 +44,25 @@ def targeted_perturbation(dataset, f, get_f, grads,target, delta=0.2, max_iter_u
 
     v = 0
     fooling_rate = 0.0
-    num_images =  int(np.shape(dataset)[0]) # The images should be stacked ALONG FIRST DIMENSION
+    # num_images =  int(np.shape(dataset)[0]) # The images should be stacked ALONG FIRST DIMENSION
+    num_images = int(np.shape(dataset)[0] / 2)
     dataset_for_foolingrate = dataset
     itr = 0
+    frame = np.zeros([92,92, 3])
+    frame = cv2.copyMakeBorder(frame, 10, 10, 10, 10, cv2.BORDER_CONSTANT, value=1)
     while fooling_rate < 1-delta and itr < max_iter_uni:
 
         # Shuffle the dataset
-        indices = np.random.permutation(len(dataset))
-        dataset = dataset[indices]
+        # indices = np.random.permutation(len(dataset))
+        # dataset = dataset[indices]
+
         # np.random.shuffle(dataset)
-        # trainset = dataset[0::2]
+        trainset = dataset[0::2]
         # testset = dataset[1::2]
         print ('Starting pass number ', itr,'Target is ' , target)
         # Go through the data set and compute the perturbation increments sequentially
         for k in range(0, num_images):
-            cur_img = dataset[k:(k+1), :, :, :]
+            cur_img = trainset[k:(k+1), :, :, :]
 
             print("\rProgress : ["+"#"*int(k/int(num_images/20))+"-"*(20-int(k/int(num_images/20)))+"] ", str(k).zfill(len(str(num_images))), ' / ',num_images,"," ,end="")
             # Compute adversarial perturbation
@@ -73,6 +77,7 @@ def targeted_perturbation(dataset, f, get_f, grads,target, delta=0.2, max_iter_u
 
                 # Project on l_p ball
                 v = proj_lp(v, xi, p)
+            v = np.multiply(v,frame)
 
         itr = itr + 1
 

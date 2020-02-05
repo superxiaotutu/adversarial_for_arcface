@@ -31,7 +31,7 @@ graph = tf.get_default_graph()
 if __name__ == '__main__':
 
 
-    with tf.device(device):
+    # with tf.device(device):
         # config = tf.ConfigProto()
         # config.gpu_options.allow_growth = True
         # session = tf.Session(config=config)
@@ -55,7 +55,7 @@ if __name__ == '__main__':
 
         persisted_input = persisted_sess.graph.get_tensor_by_name('input_image:0')
         persisted_output = persisted_sess.graph.get_tensor_by_name("op_to_store_a:0")
-        hsq_f = np.load('./data/img/hsq.npy')
+        hsq_f = np.load('./data/img/pyy.npy')
         # grad = tf.gradients(persisted_output,persisted_input_b)
         # def get_feature_map(image_inp_b):
         #     feature_map_raw = persisted_sess.run(persisted_debug,feed_dict={
@@ -104,12 +104,16 @@ if __name__ == '__main__':
 
         print('>> Computing gradient function...')
 
-        def grad_b(image_inp): return persisted_sess.run(grad, feed_dict={persisted_input: np.reshape(image_inp, (-1, 112, 112, 3)),
-            hsq_p: np.reshape(hsq_f, (-1, 512))})
+
+        def grad_b(image_inp): return persisted_sess.run(grad,feed_dict={persisted_input: np.reshape(image_inp, (-1, 112, 112, 3)),hsq_p: np.reshape(hsq_f, (-1, 512))})
+
+
+        # def get_f(image_inp): return persisted_sess.run(persisted_output,feed_dict={persisted_input: np.reshape(image_inp, (-1, 112, 112, 3))})
+
 
         print('>> Creating pre-processed imagenet data...')
         # X = create_imagenet_npy(path_train_imagenet)
-        X = create_lfw_npy()
+        X = create_lfw_npy(100)
 
         # Running universal perturbation
         # v = universal_perturbation(X, f, grad_fs, delta=0.2)
